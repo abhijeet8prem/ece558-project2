@@ -10,9 +10,9 @@ import paho.mqtt.client as paho
 from paho import mqtt
 
 # global variables
-interval = "5"
+interval = 10
 led_stat = "off"
-
+previousTime = 0
 
 # comment to the terminal to check if the script is running
 print("LED, btton, Humidity and Temperature !")
@@ -24,6 +24,7 @@ sensor = adafruit_ahtx0.AHTx0(i2c)
 # setting up object for LED
 led = digitalio.DigitalInOut(board.D18)         # creating an LED object for GPIO pin 18
 led.direction = digitalio.Direction.OUTPUT      # setting the direction for the pin as Output
+led.value = False                               # setting the defult of the LED as off
 
 # setting up object for Button
 button = digitalio.DigitalInOut(board.D4)       # creating a button object for GPIO pin 4
@@ -94,18 +95,26 @@ client.subscribe("abhijRoom1/readInterval", qos=1)
 # you can also use loop_start and loop_stop
 client.loop_forever()
 
-while True:
-    # read the temperatuer value from the sensor
-    temperature = sensor.temperature
-    # read the humidity value from the sensor
-    humidity = sensor.relative_humidity
-    
-    # printing the humidity and temperature  for debugging 
-    print("\nTemperature: %0.1f C" % temperature)
-    print("Humidity: %0.1f %%" % humidity)
 
-    client.publish("abhijRoom1/temperature", payload=temperature, qos=1)
-    client.publish("abhijRoom1/humidity", payload=humidity, qos=1)
-    client.publish("abhijRoom1/lightSwitch", payload="1", qos=1)
-    time.sleep(interval)
+
+
+while True:
+    
+    currentTime = time.time()
+
+    if currentTime-previousTime >= interval
+
+        previousTime = currentTime
+        # read the temperatuer value from the sensor
+        temperature = sensor.temperature
+        # read the humidity value from the sensor
+        humidity = sensor.relative_humidity
+
+        # printing the humidity and temperature  for debugging 
+        #print("\nTemperature: %0.1f C" % temperature)
+        #print("Humidity: %0.1f %%" % humidity)
+        client.publish("abhijRoom1/temperature", payload=temperature, qos=1)
+        client.publish("abhijRoom1/humidity", payload=humidity, qos=1)
+        client.publish("abhijRoom1/lightSwitch", payload=button.value, qos=1)
+   # time.sleep(interval)
 
