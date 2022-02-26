@@ -46,23 +46,28 @@ def on_subscribe(client, userdata, mid, granted_qos, properties=None):
 
 # On reciving any message from the a topic
 def on_message(client, userdata, msg):
+    global led_stat
+    global interval
     print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
     
-    t = str(msg.topic, encoding="UTF_8") 
+    t = str(msg.topic) 
     # check the topic
-    if t == "abhijRoom1/LED"
+    if t == "abhijRoom1/LED":
 
-        led_stat = str(msg.payload, encoding="UTF_8")
-        if led_stat == "on"
+        led_stat = str(msg.payload)
+        if led_stat == "on":
             led.value = True
-        elif led_stat == "off"
+        elif led_stat == "off":
             led.value = False
-        else
+        else:
             print("unknown command")
 
-    elif t == "abhijRoom1/readInterval"
+    elif t == "abhijRoom1/readInterval":
 
         interval = int(msg.payload)
+
+    else:
+        print("Invalid payload")
 
     # store the appropriate value in the global variable
 
@@ -102,7 +107,7 @@ while True:
     
     currentTime = time.time()
 
-    if currentTime-previousTime >= interval
+    if currentTime-previousTime >= interval:
 
         previousTime = currentTime
         # read the temperatuer value from the sensor
