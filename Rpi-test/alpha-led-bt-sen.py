@@ -55,9 +55,9 @@ def on_message(client, userdata, msg):
     if t == "abhijRoom1/LED":
 
         led_stat = str(msg.payload)
-        if led_stat == "on":
+        if led_stat == 'on':
             led.value = True
-        elif led_stat == "off":
+        elif led_stat == 'off':
             led.value = False
         else:
             print("unknown command")
@@ -96,15 +96,11 @@ client.on_publish = on_publish
 client.subscribe("abhijRoom1/LED", qos=1)           # subscribe to the LED to
 client.subscribe("abhijRoom1/readInterval", qos=1)
 
+
+
 # loop_forever for simplicity, here you need to stop the loop manually
 # you can also use loop_start and loop_stop
-client.loop_forever()
-
-
-
-
-while True:
-    
+client.loop_start()
     currentTime = time.time()
 
     if currentTime-previousTime >= interval:
@@ -121,5 +117,15 @@ while True:
         client.publish("abhijRoom1/temperature", payload=temperature, qos=1)
         client.publish("abhijRoom1/humidity", payload=humidity, qos=1)
         client.publish("abhijRoom1/lightSwitch", payload=button.value, qos=1)
+client.loop_stop()
+
+#client.loop_forever()
+
+
+
+
+#while True:
+    
+    
    # time.sleep(interval)
 
