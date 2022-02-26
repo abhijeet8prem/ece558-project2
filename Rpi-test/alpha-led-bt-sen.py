@@ -1,5 +1,6 @@
 # reference: https://learn.adafruit.com/circuitpython-on-raspberrypi-linux/digital-i-o
-#            starter code provided in clinet.pys
+#            starter code provided in client.py by Roy
+#            https://www.hivemq.com/blog/mqtt-client-library-paho-python/
 
 # imports
 import time
@@ -10,16 +11,14 @@ import paho.mqtt.client as paho
 from paho import mqtt
 
 # global variables
-interval = 10
+interval = 2
 led_stat = "off"
 previousTime = 0
-
-# comment to the terminal to check if the script is running
-print("LED, btton, Humidity and Temperature !")
+enFlag = False
 
 # Create sensor object, communicating over the board's default I2C bus
-i2c = board.I2C()  # uses board.SCL and board.SDA
-sensor = adafruit_ahtx0.AHTx0(i2c)
+i2c = board.I2C()                               # uses board.SCL and board.SDA
+sensor = adafruit_ahtx0.AHTx0(i2c)              # creating a sesnor object for the ATH sensor
 
 # setting up object for LED
 led = digitalio.DigitalInOut(board.D18)         # creating an LED object for GPIO pin 18
@@ -31,10 +30,13 @@ button = digitalio.DigitalInOut(board.D4)       # creating a button object for G
 button.direction = digitalio.Direction.INPUT    # setting the direction for the pin as Input
 button.pull = digitalio.Pull.UP                 # enabling internel pull-up resistor for the button pin
 
-
 # setting callbacks for different events to see if it works, print the message etc.
 def on_connect(client, userdata, flags, rc, properties=None):
     print("CONNACK received with code %s." % rc)
+    global enFlag
+    #print(str(rc))
+    if str(rc) == "Success":
+        enFlag = True
 
 # with this callback you can see if your publish was successful
 def on_publish(client, userdata, mid, properties=None):
@@ -49,30 +51,23 @@ def on_message(client, userdata, msg):
     global led_stat
     global interval
     print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
-    
     t = str(msg.topic) 
     # check the topic
     if t == "abhijRoom1/LED":
 
-        led_stat = str(msg.payload)
-        if led_stat == 'on':
+        led_stat = str(msg.payload, encoding="UTF_8")
+        
+        if led_stat == "on":
             led.value = True
-        elif led_stat == 'off':
+        elif led_stat == "off":
             led.value = False
         else:
             print("unknown command")
 
-    elif t == "abhijRoom1/readInterval":
-
+    elif t == "abhijRoom1/Interval":
         interval = int(msg.payload)
 
-    else:
-        print("Invalid payload")
-
-    # store the appropriate value in the global variable
-
-
-# using MQTT version 5 here, for 3.1.1: MQTTv311, 3.1: MQTTv31
+# using MQTT version 5 here
 # userdata is user defined data of any type, updated by user_data_set()
 # client_id is the given name of the client
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
@@ -90,42 +85,30 @@ client.on_subscribe = on_subscribe
 client.on_message = on_message
 client.on_publish = on_publish
 
-############################# NEEDS EDITING##########################################
+# subscribe to the incoming topics from the application
+client.subscribe("abhijRoom1/LED", qos=1)           
+client.subscribe("abhijRoom1/Interval", qos=1)
 
-# subscribe to the incomming topics from the application
-client.subscribe("abhijRoom1/LED", qos=1)           # subscribe to the LED to
-client.subscribe("abhijRoom1/readInterval", qos=1)
-
-
-
-# loop_forever for simplicity, here you need to stop the loop manually
-# you can also use loop_start and loop_stop
+# starting the loop manually
 client.loop_start()
-    currentTime = time.time()
 
-    if currentTime-previousTime >= interval:
+while True:
 
-        previousTime = currentTime
-        # read the temperatuer value from the sensor
+    currentTime = time.time()                       # reading the current 
+    #print("enFlag: {}".format(enFlag))
+    if currentTime-previousTime >= interval and enFlag == True:        # checking if the time is elapsed to publish
+        previousTime = currentTime       
+
+        # read the sensor values
         temperature = sensor.temperature
-        # read the humidity value from the sensor
         humidity = sensor.relative_humidity
 
-        # printing the humidity and temperature  for debugging 
-        #print("\nTemperature: %0.1f C" % temperature)
-        #print("Humidity: %0.1f %%" % humidity)
-        client.publish("abhijRoom1/temperature", payload=temperature, qos=1)
-        client.publish("abhijRoom1/humidity", payload=humidity, qos=1)
-        client.publish("abhijRoom1/lightSwitch", payload=button.value, qos=1)
-client.loop_stop()
+        # publishing the humidity and temperature readings
+        client.publish("abhijRoom1/temperature", payload = temperature, qos=1)
+        print("\nPublished on abhijRoom1/temperature : %f C" % temperature)
+        client.publish("abhijRoom1/humidity", payload = humidity, qos=1)
+        print("\nPublished on abhijRoom1/Humidity: %0.1f %%" % humidity)
+        client.publish("abhijRoom1/lightSwitch", payload = not button.value, qos=1)
+        print("\nPublished on abhijRoom1/lightSwitch: {} " .format(not button.value))
 
-#client.loop_forever()
-
-
-
-
-#while True:
-    
-    
-   # time.sleep(interval)
-
+#client.loop_stop()
