@@ -16,6 +16,10 @@ led_stat = "off"
 previousTime = 0
 enFlag = False
 
+mqtt_server_host = "broker.hivemq.com"          #Uses the HiveMQ public MQTT broker
+mqtt_server_port = 1883
+mqtt_keepalive = 60
+
 # Create sensor object, communicating over the board's default I2C bus
 i2c = board.I2C()                               # uses board.SCL and board.SDA
 sensor = adafruit_ahtx0.AHTx0(i2c)              # creating a sesnor object for the ATH sensor
@@ -73,13 +77,18 @@ def on_message(client, userdata, msg):
 client = paho.Client(client_id="", userdata=None, protocol=paho.MQTTv5)
 client.on_connect = on_connect
 
-# enable TLS for secure connection
-client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)
+# enable TLS for secure connection to web socket
+#client.tls_set(tls_version=mqtt.client.ssl.PROTOCOL_TLS)        
 # set username and password
-client.username_pw_set("abhij8prem", "Hiveroy101")
+#client.username_pw_set("*******", "*******")
 # connect to HiveMQ Cloud on port 8883 (default for MQTT)
-client.connect("1f32c3fb6c9b410ea7551bcd5307890c.s2.eu.hivemq.cloud", 8883)
+#client.connect("1f3xxxx........s2.eu.hivemq.cloud", 8883)
 
+client.connect (
+    host=mqtt_server_host,
+    port=mqtt_server_port,
+    keepalive=mqtt_keepalive
+ )
 # setting callbacks, use separate functions like above for better visibility
 client.on_subscribe = on_subscribe
 client.on_message = on_message
