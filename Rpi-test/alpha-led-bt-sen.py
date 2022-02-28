@@ -1,4 +1,7 @@
-# reference: https://learn.adafruit.com/circuitpython-on-raspberrypi-linux/digital-i-o
+# This script runs on a raspberry pi and connets to the HiveMQ broker and pubsishes and subscribes to specific topics
+#Author: Abhijeet Prem
+#
+#reference: https://learn.adafruit.com/circuitpython-on-raspberrypi-linux/digital-i-o
 #            starter code provided in client.py by Roy
 #            https://www.hivemq.com/blog/mqtt-client-library-paho-python/
 
