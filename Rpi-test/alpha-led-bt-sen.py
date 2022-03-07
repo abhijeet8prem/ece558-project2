@@ -1,8 +1,8 @@
-# This script runs on a raspberry pi and connets to the HiveMQ broker and pubsishes and subscribes to specific topics
+# This script runs on a raspberry pi and connets to the HiveMQ broker, pubsishes and subscribes to specific topics
 #Author: Abhijeet Prem
 #
 #reference: https://learn.adafruit.com/circuitpython-on-raspberrypi-linux/digital-i-o
-#            starter code provided in client.py by Roy
+#            starter code provided in client.py by Prof Roy 
 #            https://www.hivemq.com/blog/mqtt-client-library-paho-python/
 
 # imports
@@ -104,6 +104,13 @@ client.subscribe("abhijRoom1/Interval", qos=1)
 # starting the loop manually
 client.loop_start()
 
+# varaibles to read the process button press
+reading             = False         # variable to take the current reading of the button
+buttonState         = False         # variable to store the current button state
+lastButtonState     = False         # variable to store the previous state of the button
+lastDebounceTime    = 0             # the last time the output pin was toggled
+debounceDelay       = 50            # the debounce time; increase if the output flickers
+
 while True:
 
     currentTime = time.time()                       # reading the current 
@@ -120,7 +127,32 @@ while True:
         print("\nPublished on abhijRoom1/temperature : %f C" % temperature)
         client.publish("abhijRoom1/humidity", payload = humidity, qos=1)
         print("\nPublished on abhijRoom1/Humidity: %0.1f %%" % humidity)
-        client.publish("abhijRoom1/lightSwitch", payload = not button.value, qos=1)
-        print("\nPublished on abhijRoom1/lightSwitch: {} " .format(not button.value))
+
+    #check the status of the button, if pressed update flag
+    
+    reading = not button.value
+
+    ########### Debounce button function ###################
+    # check to see if you just pressed the button (i.e. the input went from LOW to HIGH), and you've waited long enough
+    # since the last press to ignore any noise:
+
+    if reading != lastButtonState       # checking if the current reading is not the laste button state
+        
+        lastDebounceTime = time.time()
+
+    if (time.time() - lastDebounceTime) > debounceDelay
+
+        #check if the button state has changed, if it has changed update the Button State
+        if reading != buttonState  
+
+            buttonState = reading       # updating the button state with current reading
+            
+            # we need to send update to the topic only when state changes happen ie when button pressed and not pressed, 
+            # send the current value of the button.
+            
+            client.publish("abhijRoom1/lightSwitch", payload = buttonState, qos=1)
+            print("\nPublished on abhijRoom1/lightSwitch: {} " .format(buttonState))
+        
+    lastButtonState = reading  # setting the last button state as current reading
 
 #client.loop_stop()
